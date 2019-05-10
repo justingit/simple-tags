@@ -23,10 +23,16 @@ class SimpleTags_Admin_Mass {
 	 * @author Amaury Balmer
 	 */
 	public static function admin_menu() {
-		add_management_page( __( 'Simple Terms: Mass Edit Terms', 'simpletags' ), __( 'Mass Edit Terms', 'simpletags' ), 'simple_tags', 'st_mass_terms', array(
-			__CLASS__,
-			'pageMassEditTags',
-		) );
+		add_management_page(
+			__( 'Simple Terms: Mass Edit Terms', 'simpletags' ),
+			__( 'Mass Edit Terms', 'simpletags' ),
+			'simple_tags',
+			'st_mass_terms',
+			array(
+				__CLASS__,
+				'page_mass_edit_tags',
+			)
+		);
 	}
 
 	/**
@@ -84,7 +90,7 @@ class SimpleTags_Admin_Mass {
 	 * WP Page - Mass edit tags
 	 *
 	 */
-	public static function pageMassEditTags() {
+	public static function page_mass_edit_tags() {
 		global $wpdb, $wp_locale, $wp_query;
 		list( $post_stati, $avail_post_stati ) = self::edit_data_query();
 
@@ -177,7 +183,7 @@ class SimpleTags_Admin_Mass {
 								?>
 								<select name='m'>
 									<option<?php selected( @$_GET['m'], 0 ); ?>
-										value='0'><?php _e( 'Show all dates', 'simpletags' ); ?></option>
+											value='0'><?php _e( 'Show all dates', 'simpletags' ); ?></option>
 									<?php
 									foreach ( $arc_result as $arc_row ) {
 										if ( $arc_row->yyear == 0 ) {
@@ -202,9 +208,9 @@ class SimpleTags_Admin_Mass {
 							?>
 
 							<select name="posts_per_page" id="posts_per_page">
-								<option <?php if ( ! isset( $_GET['posts_per_page'] ) ) {
-									echo 'selected="selected"';
-								} ?> value=""><?php _e( 'Quantity&hellip;', 'simpletags' ); ?></option>
+								<option <?php selected( ! isset( $_GET['posts_per_page'] ), true ); ?> value="">
+									<?php _e( 'Quantity&hellip;', 'simpletags' ); ?>
+								</option>
 								<option <?php selected( $posts_per_page, 10 ); ?> value="10">10</option>
 								<option <?php selected( $posts_per_page, 20 ); ?> value="20">20</option>
 								<option <?php selected( $posts_per_page, 30 ); ?> value="30">30</option>
@@ -215,7 +221,7 @@ class SimpleTags_Admin_Mass {
 							</select>
 
 							<input type="submit" id="post-query-submit" value="<?php _e( 'Filter', 'simpletags' ); ?>"
-							       class="button-secondary"/>
+								   class="button-secondary"/>
 						<?php } ?>
 					</div>
 
@@ -234,6 +240,7 @@ class SimpleTags_Admin_Mass {
 						<tr>
 							<th class="manage-column"><?php _e( 'Post title', 'simpletags' ); ?></th>
 							<th class="manage-column"><?php printf( __( 'Terms : %s', 'simpletags' ), esc_html( SimpleTags_Admin::$taxo_name ) ); ?></th>
+							<th class="manage-column" style="width:70px;"><?php _e( 'Terms counter', 'simpletags' ); ?></th>
 						</tr>
 						</thead>
 						<tbody>
@@ -241,16 +248,23 @@ class SimpleTags_Admin_Mass {
 						$class = 'alternate';
 						while ( have_posts() ) {
 							the_post();
-							$class = ( $class == 'alternate' ) ? '' : 'alternate';
+							$class = ( 'alternate' === $class ) ? '' : 'alternate';
 							?>
 							<tr valign="top" class="<?php echo $class; ?>">
-								<th scope="row"><a
-										href="<?php echo admin_url( 'post.php?action=edit&amp;post=' . get_the_ID() ); ?>"
-										title="<?php _e( 'Edit', 'simpletags' ); ?>"><?php echo ( get_the_title() == '' ) ? the_ID() : the_title(); ?></a>
+								<th scope="row">
+									<a href="<?php echo admin_url( 'post.php?action=edit&amp;post=' . get_the_ID() ); ?>"
+									   title="<?php _e( 'Edit', 'simpletags' ); ?>"><?php echo ( get_the_title() == '' ) ? the_ID() : the_title(); ?></a>
 								</th>
-								<td><input id="tags-input<?php the_ID(); ?>" class="autocomplete-input tags_input"
-								           type="text" size="100" name="tags[<?php the_ID(); ?>]"
-								           value="<?php echo SimpleTags_Admin::getTermsToEdit( SimpleTags_Admin::$taxonomy, get_the_ID() ); ?>"/>
+								<td>
+									<input id="tags-input<?php the_ID(); ?>" class="autocomplete-input tags_input"
+										   type="text" style="width:100%" name="tags[<?php the_ID(); ?>]"
+										   value="<?php echo SimpleTags_Admin::getTermsToEdit( SimpleTags_Admin::$taxonomy, get_the_ID() ); ?>"/>
+								</td>
+								<td	>
+									<?php
+									$terms = wp_get_post_terms( get_the_ID(), SimpleTags_Admin::$taxonomy );
+									echo count( $terms );
+									?>
 								</td>
 							</tr>
 							<?php
@@ -261,9 +275,9 @@ class SimpleTags_Admin_Mass {
 
 					<p class="submit">
 						<input type="hidden" name="secure_mass"
-						       value="<?php echo wp_create_nonce( 'st_mass_terms' ); ?>"/>
+							   value="<?php echo wp_create_nonce( 'st_mass_terms' ); ?>"/>
 						<input class="button-primary" type="submit" name="update_mass"
-						       value="<?php _e( 'Update all &raquo;', 'simpletags' ); ?>"/>
+							   value="<?php _e( 'Update all &raquo;', 'simpletags' ); ?>"/>
 					</p>
 				</form>
 
